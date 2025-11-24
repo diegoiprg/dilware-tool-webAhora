@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Apple Light Mode Colors */
+    --background: 240 5% 96%; /* #F2F2F7 - System Grouped Background */
+    --foreground: 0 0% 0%; /* #000000 - Label */
+    
+    --card: 0 0% 100%; /* #FFFFFF - Secondary System Grouped Background */
+    --card-foreground: 0 0% 0%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    
+    --primary: 211 100% 50%; /* #007AFF - System Blue */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+    
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%; /* #8E8E93 - System Gray */
+    
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
+    
+    --destructive: 0 100% 50%; /* #FF3B30 - System Red */
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 211 100% 50%;
+    
+    --radius: 1.5rem;
+  }
+
+  .dark {
+    /* Apple Dark Mode Colors */
+    --background: 0 0% 0%; /* #000000 - System Background */
+    --foreground: 0 0% 100%; /* #FFFFFF - Label */
+    
+    --card: 240 4% 11%; /* #1C1C1E - Secondary System Grouped Background */
+    --card-foreground: 0 0% 100%;
+    
+    --popover: 240 4% 11%;
+    --popover-foreground: 0 0% 100%;
+    
+    --primary: 211 100% 50%; /* #0A84FF - System Blue Dark */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 64%; /* #8E8E93 - System Gray */
+    
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 98%;
+    
+    --destructive: 0 100% 45%; /* #FF453A - System Red Dark */
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 211 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Debug mode styles */
+.debug-mode * {
+  border: 1px solid;
+}
+
+.dark .debug-mode * {
+  border-color: white;
+}
+
+.light .debug-mode * {
+  border-color: black;
+}

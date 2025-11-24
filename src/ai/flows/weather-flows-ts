@@ -1,0 +1,195 @@
+'use server';
+/**
+ * @fileOverview A weather flow that fetches data from public APIs.
+ *
+ * - getWeatherFlow - A function that fetches weather and location data.
+ */
+
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
+import {
+  WeatherInputSchema,
+  WeatherSchema,
+} from '@/ai/schemas/weather-schemas';
+
+async function makeRequest(url: string): Promise<any> {
+  // Validate URL to prevent SSRF
+  try {
+    const urlObj = new URL(url);
+    if (!['http:', 'https:'].includes(urlObj.protocol)) {
+      throw new Error('Invalid protocol');
+    }
+    // Only allow specific domains for security
+    const allowedDomains = [
+      'api.open-meteo.com',
+      'geocoding-api.open-meteo.com',
+      'ipapi.co',
+    ];
+    if (
+      !allowedDomains.some(
+        (domain) =>
+          urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain)
+      )
+    ) {
+      throw new Error('Domain not allowed');
+    }
+  } catch (error) {
+    throw new Error(`Invalid URL: ${url}`);
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Firebase-Studio-Agent/1.0',
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(
+        `Network response was not ok. Status: ${response.status}`
+      );
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Response is not JSON');
+    }
+
+    return response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timeout');
+    }
+    throw error;
+  }
+}
+
+const getWeather = ai.defineFlow(
+  {
+    name: 'getWeather',
+    inputSchema: WeatherInputSchema,
+    outputSchema: WeatherSchema.nullable(),
+  },
+  async (input: z.infer<typeof WeatherInputSchema>) => {
+    let { lat, lon } = input;
+
+    try {
+      // Validate coordinates if provided
+      if (
+        lat !== undefined &&
+        (typeof lat !== 'number' || !isFinite(lat) || lat < -90 || lat > 90)
+      ) {
+        throw new Error('Invalid latitude provided');
+      }
+      if (
+        lon !== undefined &&
+        (typeof lon !== 'number' || !isFinite(lon) || lon < -180 || lon > 180)
+      ) {
+        throw new Error('Invalid longitude provided');
+      }
+
+      // If lat/lon are not provided, get them from IP
+      if (lat === undefined || lon === undefined) {
+        const ipData = await makeRequest('https://ipapi.co/json/');
+        if (
+          ipData &&
+          typeof ipData === 'object' &&
+          ipData.latitude &&
+          ipData.longitude
+        ) {
+          lat = ipData.latitude;
+          lon = ipData.longitude;
+        } else {
+          throw new Error('Could not determine location from IP.');
+        }
+      }
+
+      // Fetch weather and location name in parallel
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,uv_index,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
+      const geocodeUrl = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}`;
+
+      const [weatherData, geocodeData] = await Promise.all([
+        makeRequest(weatherUrl),
+        makeRequest(geocodeUrl),
+      ]);
+
+      // Process weather data with validation
+      if (
+        !weatherData ||
+        typeof weatherData !== 'object' ||
+        !weatherData.current ||
+        !weatherData.daily
+      ) {
+        throw new Error('Invalid weather data received.');
+      }
+
+      const current = weatherData.current;
+      const daily = weatherData.daily;
+
+      if (
+        typeof current.temperature_2m !== 'number' ||
+        typeof current.relative_humidity_2m !== 'number' ||
+        typeof current.uv_index !== 'number' ||
+        typeof current.weather_code !== 'number' ||
+        !Array.isArray(daily.temperature_2m_min) ||
+        !Array.isArray(daily.temperature_2m_max)
+      ) {
+        throw new Error('Invalid weather data structure');
+      }
+
+      const weatherResult = {
+        temperature: `${Math.round(current.temperature_2m)}°C`,
+        minTemperature: `${Math.round(daily.temperature_2m_min[0])}°`,
+        maxTemperature: `${Math.round(daily.temperature_2m_max[0])}°`,
+        humidity: `${current.relative_humidity_2m}%`,
+        uvIndex: `${Math.round(current.uv_index)}`,
+        weatherCode: current.weather_code,
+      };
+
+      // Process location data with validation
+      let location = 'Ubicación desconocida';
+      if (
+        geocodeData &&
+        typeof geocodeData === 'object' &&
+        geocodeData.results &&
+        Array.isArray(geocodeData.results) &&
+        geocodeData.results[0]
+      ) {
+        const result = geocodeData.results[0];
+        if (result && typeof result === 'object') {
+          const locationParts = [
+            result.admin3,
+            result.admin2,
+            result.country,
+          ].filter(Boolean);
+          if (locationParts.length > 0) {
+            location = locationParts.join(', ');
+          }
+        }
+      }
+
+      return {
+        ...weatherResult,
+        location,
+      };
+    } catch (error) {
+      console.error('Error in getWeather flow:', error);
+      // In case of any error in the flow, return null
+      return null;
+    }
+  }
+);
+
+export async function getWeatherFlow(
+  input: z.infer<typeof WeatherInputSchema>
+) {
+  return await getWeather(input);
+}
