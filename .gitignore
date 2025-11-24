@@ -3,7 +3,7 @@ node_modules/
 out/
 dist/
 npm-debug.log*
-package-lock.json
+
 /.envnode_modules/
 *.log
 .DS_Store
