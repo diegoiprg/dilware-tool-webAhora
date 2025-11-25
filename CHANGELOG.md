@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [1.2.0] - 2025-11-24
+
+### Added
+- **Error Boundary**: Added global error boundary component to prevent app crashes from rendering errors.
+- **Content Security Policy**: Implemented comprehensive CSP headers for enhanced XSS protection.
+- **localStorage Quota Handling**: Added error handling for localStorage quota exceeded errors with automatic cleanup and retry logic.
+
+### Fixed
+- Fixed useEffect dependency warnings in `useVersionCheck.ts` with proper documentation.
+- Improved error handling in `SettingsContext.tsx` and `useAppLocation.ts`.
+
+### Security
+- Enhanced security headers: CSP, X-Frame-Options (DENY), Referrer-Policy, Permissions-Policy.
+- Added protection against XSS attacks through strict CSP rules.
+- Improved error tracking with Google Analytics integration in ErrorBoundary.
+
 ## [1.1.0] - 2025-11-24
 
 ### Added

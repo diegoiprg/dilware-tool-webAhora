@@ -6,6 +6,7 @@ import { SettingsProvider } from '@/context/SettingsContext';
 import { Toaster } from '@/components/ui/toaster';
 import { Analytics } from '@/components/Analytics';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 
 
@@ -53,9 +54,11 @@ export default function RootLayout({
         )}
         <SettingsProvider>
           <ThemeProvider>
-            <Analytics />
-            {children}
-            <Toaster />
+            <ErrorBoundary>
+              <Analytics />
+              {children}
+              <Toaster />
+            </ErrorBoundary>
           </ThemeProvider>
         </SettingsProvider>
       </body>

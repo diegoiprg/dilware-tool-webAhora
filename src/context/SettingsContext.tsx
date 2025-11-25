@@ -197,7 +197,30 @@ export const SettingsProvider = ({
         JSON.stringify(settingsToSave)
       );
     } catch (error) {
-      console.error('Error saving settings to localStorage', error);
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.error('localStorage quota exceeded. Settings may not be saved.');
+        // Attempt to clear old data and retry
+        try {
+          // Clear any old cache entries
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < window.localStorage.length; i++) {
+            const key = window.localStorage.key(i);
+            if (key && key.startsWith('user-location')) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => window.localStorage.removeItem(key));
+          // Retry save
+          window.localStorage.setItem(
+            SETTINGS_STORAGE_KEY,
+            JSON.stringify(settingsToSave)
+          );
+        } catch (retryError) {
+          console.error('Failed to save settings even after cleanup:', retryError);
+        }
+      } else {
+        console.error('Error saving settings to localStorage', error);
+      }
     }
   }, []);
 

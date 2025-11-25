@@ -217,7 +217,10 @@ export function useVersionCheck(
         intervalRef.current = null;
       }
     };
-  }, [checkInterval]); // Remove checkForUpdates from dependencies
+    // Note: checkForUpdates is intentionally excluded from dependencies to prevent
+    // infinite re-initialization of the interval. The function is stable via useCallback.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkInterval]);
 
   const currentVersionClean = APP_VERSION.replace(/^v/, '');
   const hasUpdate = latestVersion

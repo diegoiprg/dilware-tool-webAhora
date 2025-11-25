@@ -265,10 +265,28 @@ export const useAppLocation = (): {
         }
 
         setLocation(newLocation);
-        localStorage.setItem(
-          cacheKey,
-          JSON.stringify({ timestamp: Date.now(), data: newLocation })
-        );
+        try {
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ timestamp: Date.now(), data: newLocation })
+          );
+        } catch (storageError) {
+          if (storageError instanceof DOMException && storageError.name === 'QuotaExceededError') {
+            console.warn('localStorage quota exceeded, clearing old location cache');
+            // Clear old location cache and retry
+            try {
+              localStorage.removeItem(cacheKey);
+              localStorage.setItem(
+                cacheKey,
+                JSON.stringify({ timestamp: Date.now(), data: newLocation })
+              );
+            } catch (retryError) {
+              console.error('Failed to cache location even after cleanup:', retryError);
+            }
+          } else {
+            console.error('Error caching location:', storageError);
+          }
+        }
       } catch (err) {
         let errorMessage = 'Location N/A';
         if (err instanceof Error) {
