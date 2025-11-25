@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+
+## [1.1.0] - 2025-11-24
+
+### Added
+- Google Analytics integration now active in production builds.
+- Created `.env.local.example` file for environment variable documentation.
+
+### Changed
+- Updated GitHub Actions workflow to inject `NEXT_PUBLIC_GA_MEASUREMENT_ID` during build process.
+
 ## [1.0.1] - 2025-11-24
 
 ### Fixed
