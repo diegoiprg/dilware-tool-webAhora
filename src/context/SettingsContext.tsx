@@ -103,6 +103,9 @@ interface SettingsState extends Settings {
   setHighContrast: (enabled: boolean) => void;
   setLargeText: (enabled: boolean) => void;
   setUpdateCheckInterval: (interval: number) => void;
+
+  // Reset
+  resetSettings: () => void;
 }
 
 /**
@@ -331,6 +334,10 @@ export const SettingsProvider = ({
     setSettings((s) => ({ ...s, autoDarkMode: enabled }));
   }, []);
 
+  const resetSettings = useCallback(() => {
+    setSettings(defaultSettings);
+  }, []);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -355,6 +362,8 @@ export const SettingsProvider = ({
         setHighContrast,
         setLargeText,
         setUpdateCheckInterval,
+        // Reset
+        resetSettings,
       }}
     >
       {children}

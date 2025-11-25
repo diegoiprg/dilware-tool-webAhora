@@ -103,6 +103,7 @@ export const SettingsPanel = ({ appVersion }: { appVersion: string }) => {
     setLargeText,
     updateCheckInterval,
     setUpdateCheckInterval,
+    resetSettings,
   } = useSettings();
 
   // Track settings panel open
@@ -420,25 +421,7 @@ export const SettingsPanel = ({ appVersion }: { appVersion: string }) => {
 
           <div className="flex items-center justify-center pt-4">
             <button
-              onClick={() => {
-                // Reset all settings to defaults
-                setLanguage('es');
-                setDateSeparator('space');
-                setDayFormat('full');
-                setMonthFormat('full');
-                setYearFormat('full');
-                setTimeFormat('24h');
-                setShowSeconds(false);
-                setBlinkingColons(false);
-                setTempUnit('C');
-                setRefreshInterval(1);
-                setTheme('dark');
-                setAutoDarkMode(true);
-                setHighContrast(false);
-                setLargeText(false);
-                setUpdateCheckInterval(1);
-                // Note: settingsReset tracking not implemented yet
-              }}
+              onClick={resetSettings}
               className="px-4 py-2 text-sm bg-muted hover:bg-muted/80 rounded-md transition-colors"
             >
               {t.settings.general.reset}
